@@ -1,0 +1,10 @@
+#ignore
+#folders
+build-Desktop-Debug/
+build-Desktop-Release/
+build-Desktop-Profile/
+
+#file types
+*.o
+*.exe
+*.pro.user
