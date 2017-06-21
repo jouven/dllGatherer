@@ -1,8 +1,17 @@
 #ignore
+
 #folders
 build-Desktop-Debug/
 build-Desktop-Release/
 build-Desktop-Profile/
+release/
+debug/
+
+#files
+.qmake.stash
+Makefile
+Makefile.Debug
+Makefile.Release
 
 #file types
 *.o
