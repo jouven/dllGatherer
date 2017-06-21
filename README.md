@@ -43,7 +43,7 @@ If it still complains about needing dlls use a program like cygcheck.exe, Cygwin
 
 "includeDllPaths" optional, additional directories to search .dll files, by default dllGatherer searches in the PATH directories for dlls
 
-"excludeDllPaths" optional, there might be undesired PATH directories to find/copy dlls of
+"excludeDllPaths" optional, there might be undesired PATH directories to find/copy dlls from
 
 Command line usage
 ------------------
