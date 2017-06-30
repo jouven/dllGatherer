@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 //        {
 //            qout << "pathItem_ite_con " << pathItem_ite_con << endl;
 //        }
-        QStringList oneArgument({"." + QDir::separator() + fileToGatherDllsFileInfo.fileName()});
+        QStringList oneArgument({QString(".") + QDir::separator() + fileToGatherDllsFileInfo.fileName()});
         if (not config.windeployqtPath_pub.isEmpty())
         {
             QProcess windeployqtProcess;
