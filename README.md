@@ -50,6 +50,10 @@ Command line usage
 
     dllGatherer.exe [another exe path]
     
-File explorer
--------------
+File explorer usage
+-------------------
 Drag and drop the target executable into dllGatherer.exe
+
+Considerations
+--------------
+Cygcheck doesn't know/care about the dll files architecture so it can mix x86-64 with x86, making the target executable fail to run even with the all dll/s in it's path.
