@@ -109,7 +109,24 @@ int main(int argc, char *argv[])
         QFile configFile(QCoreApplication::applicationDirPath() + "/config.json");
         if (not configFile.exists())
         {
-            errorStr.append("Config file, config.json, doesn't exist");
+            errorStr.append("Config file, config.json, doesn't exist.\nIt has to exist on the same path as the dllGatherer executable and it must have the following structure:\n"
+R"({
+  "cygcheckPath": "H:\\msys64\\usr\\bin\\cygcheck.exe"
+  , "cygcheckDependencyNotFoundError": "cygcheck: track_down: could not find "
+  , "windeployqtPath": "H:\\msys64\\mingw64\\bin\\windeployqt.exe"
+  , "includeDllPaths": ["H:\\msys64\\mingw64\\bin"]
+  , "excludeDllPaths": ["C:\\Program Files (x86)\\gtk-3.8.1", "H:\\FreeArc\\bin"]
+}
+
+"cygcheckPath" mandatory, cygcheck executable path or anything that outputs like it
+
+"cygcheckDependencyNotFoundError" optional, defaults to "cygcheck: track_down: could not find " (the default error when cygcheck can't find a dll), this message is parsed to get the dll afterwards.
+
+"windeployqtPath" optional
+
+"includeDllPaths" optional, additional directories to search .dll files, by default dllGatherer searches in the PATH directories for dlls
+
+"excludeDllPaths" optional, there might be undesired PATH directories to find/copy dlls from)");
             break;
         }
         QByteArray jsonByteArray;
@@ -143,7 +160,7 @@ int main(int argc, char *argv[])
 
         if (config.cygcheckPath_pub.isEmpty())
         {
-            errorStr.append("cycgcheckPath string is not set or empty in the config.json file");
+            errorStr.append("cygcheckPath string is not set or empty in the config.json file");
             break;
         }
 
