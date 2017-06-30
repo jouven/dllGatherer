@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         {
             fileToGatherDllsStr.prepend(".").prepend(QDir::separator());
             fileToGatherDllsFileInfo = QFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
-            qout << R"(fileToGatherDllsStr )" << fileToGatherDllsStr << endl;
+            //qout << R"(fileToGatherDllsStr )" << fileToGatherDllsStr << endl;
             if (not fileToGatherDllsFileInfo.exists())
             {
                 errorStr.append("Target to gather dlls for doesn't exist");
@@ -288,46 +288,41 @@ R"({
                 else
                 {
                     QDir resultPathTmp(resultFileInfoTmp.canonicalPath());
-                    if (not resultPathTmp.exists())
+                    auto findResultTmp(PATHItemsSet.find(resultPathTmp.canonicalPath()));
+                    //if it's on the path folders do nothing
+                    if (findResultTmp != PATHItemsSet.constEnd())
                     {
-                        errorStr.append("Dependency path " + resultPathTmp.canonicalPath() + " doesn't exist\n");
+                        //qout << "pathTmp.canonicalPath() " << pathTmp.canonicalPath() << "\n";
+                        //qout << "*findResultTmp " << *findResultTmp << "\n";
+                        //qout << "dll dependency found on PATH " << resultLines[i] << "\n";
                     }
                     else
                     {
-                        auto findResultTmp(PATHItemsSet.find(resultPathTmp.canonicalPath()));
-                        //if it's on the path folders do nothing
-                        if (findResultTmp != PATHItemsSet.constEnd())
+                        //not found on the PATH it has to be copied, if the folder
+                        //isn't on the excluded dll paths
+                        auto findExcludedResultTmp(excludeDllPathsSet.find(resultFileInfoTmp.canonicalPath()));
+                        if (findExcludedResultTmp == excludeDllPathsSet.constEnd())
                         {
-                            //qout << "pathTmp.canonicalPath() " << pathTmp.canonicalPath() << "\n";
-                            //qout << "*findResultTmp " << *findResultTmp << "\n";
-                            //qout << "dll dependency found on PATH " << resultLines[i] << "\n";
+                            filesToCopy.insert(checkResultFullPaths.at(i));
                         }
                         else
                         {
-                            //not found on the PATH it has to be copied, if the folder
-                            //isn't on the excluded dll paths
-                            auto findExcludedResultTmp(excludeDllPathsSet.find(resultFileInfoTmp.canonicalPath()));
-                            if (findExcludedResultTmp == excludeDllPathsSet.constEnd())
-                            {
-                                filesToCopy.insert(checkResultFullPaths.at(i));
-                            }
-                            else
-                            {
-                                checkResultFileNames.insert(resultFileInfoTmp.fileName());
-                            }
+                            checkResultFileNames.insert(resultFileInfoTmp.fileName());
                         }
                     }
                 }
             }
 
             //qout << "check for filenames in PATHs " << endl;
+            //for dlls that are required but were found on excluded dllPaths, search the names
+            //on the PATHItemsSet
             for (const auto& checkResultFilename_ite_con : checkResultFileNames)
             {
                 //qout << "checkResultFilename_ite_con " << checkResultFilename_ite_con << "\n";
                 //although i don't think it would complain about not finding on the same executable path
                 //check if it's already there
                 QFileInfo fileInfoTmp(fileToGatherDllsFileInfo.canonicalPath() + R"(/)" + checkResultFilename_ite_con);
-                //if it's there no need to copy it again
+                //if it's there, no need to copy it again
                 if (fileInfoTmp.exists())
                 {
                     //qout << "checkResultFilename_ite_con exists" << endl;
