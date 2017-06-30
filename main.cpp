@@ -129,6 +129,7 @@ R"({
 "excludeDllPaths" optional, there might be undesired PATH directories to find/copy dlls from)");
             break;
         }
+        
         QByteArray jsonByteArray;
         if (configFile.open(QIODevice::ReadOnly))
         {
@@ -139,11 +140,12 @@ R"({
             errorStr.append("Could not open config file config.json");
             break;
         }
+        
         auto jsonDocObj(QJsonDocument::fromJson(jsonByteArray));
         configFile_s config;
         if (jsonDocObj.isNull())
         {
-            errorStr.append("Could not parse json from the config file, config.json");
+            errorStr.append("Could not parse json from the config file config.json");
             //qout << "jsonByteArray " << jsonByteArray << endl;
             //qout << "isNull jsonDocObj" << endl;
             break;
@@ -160,10 +162,11 @@ R"({
 
         if (config.cygcheckPath_pub.isEmpty())
         {
-            errorStr.append("cygcheckPath string is not set or empty in the config.json file");
+            errorStr.append("cygcheckPath string is not set or empty in config.json");
             break;
         }
 
+        //add the included dll paths to PATHItemsSet
         for (const auto& ddlPath_ite_con : config.includeDllPaths_pub.toVariantList())
         {
             QDir qdirTmp(QDir::fromNativeSeparators(ddlPath_ite_con.toString()));
@@ -172,7 +175,12 @@ R"({
                 //qout << "qdirTmp.canonicalPath() " << qdirTmp.canonicalPath() << endl;
                 PATHItemsSet.insert(qdirTmp.canonicalPath());
             }
+            else
+            {
+                errorStr.append("Include dll path: " + ddlPath_ite_con.toString() + " doesn't exist");
+            }
         }
+        
         QSet<QString> excludeDllPathsSet;
         for (const auto& ddlPath_ite_con : config.excludeDllPaths_pub.toVariantList())
         {
@@ -181,7 +189,12 @@ R"({
             {
                 excludeDllPathsSet.insert(qdirTmp.canonicalPath());
             }
+            else
+            {
+                errorStr.append("Exclude dll path: " + ddlPath_ite_con.toString() + " doesn't exist");
+            }
         }
+        //remove the excluded PATHs
         for (const auto& excludeDllPath_ite_con : excludeDllPathsSet)
         {
             PATHItemsSet.remove(excludeDllPath_ite_con);
@@ -191,7 +204,10 @@ R"({
 //        {
 //            qout << "pathItem_ite_con " << pathItem_ite_con << endl;
 //        }
+        
+        
         QStringList oneArgument({QString(".") + QDir::separator() + fileToGatherDllsFileInfo.fileName()});
+        //call windeployqtPath_pub if set
         if (not config.windeployqtPath_pub.isEmpty())
         {
             QProcess windeployqtProcess;
