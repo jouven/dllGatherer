@@ -16,6 +16,7 @@
 #include <QProcessEnvironment>
 #include <QCommandLineParser>
 #include <QSet>
+//#include <QThread>
 
 namespace
 {
@@ -69,30 +70,43 @@ int main(int argc, char *argv[])
         }
 
         QString fileToGatherDllsStr(parsedPositionalArgs.at(0));
-        QFileInfo fileToGatherDllsFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
-        if (not fileToGatherDllsFileInfo.exists())
+        if (fileToGatherDllsStr.isEmpty())
         {
-            errorStr.append("Target to gather dlls for doesn't exist");
+            errorStr.append("Target to gather dlls is empty");
             break;
         }
 
+        QFileInfo fileToGatherDllsFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
+        if (not fileToGatherDllsFileInfo.exists())
+        {
+            fileToGatherDllsStr.prepend(".").prepend(QDir::separator());
+            fileToGatherDllsFileInfo = QFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
+            qout << R"(fileToGatherDllsStr )" << fileToGatherDllsStr << endl;
+            if (not fileToGatherDllsFileInfo.exists())
+            {
+                errorStr.append("Target to gather dlls for doesn't exist");
+                break;
+            }
+        }
+        // if (not fileToGatherDllsFileInfo.exists())
+        // {
+            // errorStr.append("Target to gather dlls for doesn't exist");
+            // break;
+        // }
+        
         auto sysEnviroment(QProcessEnvironment::systemEnvironment());
         QString PATHStr(sysEnviroment.value("PATH"));
     //    qout << R"(sysEnviroment.value("PATH") )" << PATHStr << endl;
-    #ifdef __WIN32__
-        auto splittedPATH(PATHStr.split(";", QString::SkipEmptyParts));
-    #else
-        auto splittedPATH(PATHStr.split(":", QString::SkipEmptyParts));
-    #endif
+    
+        auto splittedPATH(PATHStr.split(QDir::listSeparator(), QString::SkipEmptyParts));
+        QSet<QString> PATHItemsSet;
+        for (const auto& pathItem_ite_con : splittedPATH)
+        {
+            //qout << "QDir::fromNativeSeparators(pathItem_ite_con) " << QDir::fromNativeSeparators(pathItem_ite_con) << endl;
+            PATHItemsSet.insert(QDir::fromNativeSeparators(pathItem_ite_con));
+        }
 
-       QSet<QString> PATHItemsSet;
-       for (const auto& pathItem_ite_con : splittedPATH)
-       {
-           //qout << "QDir::fromNativeSeparators(pathItem_ite_con) " << QDir::fromNativeSeparators(pathItem_ite_con) << endl;
-           PATHItemsSet.insert(QDir::fromNativeSeparators(pathItem_ite_con));
-       }
-
-        QFile configFile("config.json");
+        QFile configFile(QCoreApplication::applicationDirPath() + "/config.json");
         if (not configFile.exists())
         {
             errorStr.append("Config file, config.json, doesn't exist");
@@ -146,7 +160,10 @@ int main(int argc, char *argv[])
         for (const auto& ddlPath_ite_con : config.excludeDllPaths_pub.toVariantList())
         {
             QDir qdirTmp(QDir::fromNativeSeparators(ddlPath_ite_con.toString()));
-            excludeDllPathsSet.insert(qdirTmp.canonicalPath());
+            if (qdirTmp.exists())
+            {
+                excludeDllPathsSet.insert(qdirTmp.canonicalPath());
+            }
         }
         for (const auto& excludeDllPath_ite_con : excludeDllPathsSet)
         {
@@ -157,7 +174,7 @@ int main(int argc, char *argv[])
 //        {
 //            qout << "pathItem_ite_con " << pathItem_ite_con << endl;
 //        }
-        QStringList oneArgument({R"(.\)" + fileToGatherDllsFileInfo.fileName()});
+        QStringList oneArgument({"." + QDir::separator() + fileToGatherDllsFileInfo.fileName()});
         if (not config.windeployqtPath_pub.isEmpty())
         {
             QProcess windeployqtProcess;
@@ -340,6 +357,7 @@ int main(int argc, char *argv[])
     if (not errorStr.isEmpty())
     {
         qout << "Errors:\n" << errorStr << endl;
+//        QThread::sleep(5);
         return EXIT_FAILURE;
     }
 }
