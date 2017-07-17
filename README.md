@@ -56,4 +56,4 @@ Drag and drop the target executable into dllGatherer.exe
 
 Considerations
 --------------
-Cygcheck doesn't know/care about the dll files architecture so it can mix x86-64 with x86, making the target executable fail to run even with all the required dll in it's path.
+Cygcheck doesn't know/care about the dll files architecture so it can mix x86-64 with x86, making the target executable fail to run even with all the required dll in its path.
