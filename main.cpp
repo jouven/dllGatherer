@@ -395,7 +395,7 @@ R"({
 
     if (controlCToExitTmp)
     {
-        qout << "\nPress control+C to exit" << endl;
+        qout << "\nPress control+C or send a SIGTERM to exit" << endl;
         while (true)
         {
             QThread::sleep(1);
