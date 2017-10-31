@@ -16,7 +16,7 @@
 #include <QProcessEnvironment>
 #include <QCommandLineParser>
 #include <QSet>
-//#include <QThread>
+#include <QThread>
 
 namespace
 {
@@ -27,6 +27,7 @@ struct configFile_s
     QString windeployqtPath_pub;
     QJsonArray includeDllPaths_pub;
     QJsonArray excludeDllPaths_pub;
+    bool controlCToExit_pub = false;
     void read(const QJsonObject &json)
     {
         cygcheckPath_pub = json["cygcheckPath"].toString();
@@ -37,6 +38,7 @@ struct configFile_s
         }
         includeDllPaths_pub = json["includeDllPaths"].toArray();
         excludeDllPaths_pub = json["excludeDllPaths"].toArray();
+        controlCToExit_pub =  json["controlCToExit"].toBool(false);
     }
 };
 
@@ -44,6 +46,7 @@ struct configFile_s
 
 int main(int argc, char *argv[])
 {
+    bool controlCToExitTmp(false);
     QCoreApplication app(argc, argv);
     QString errorStr;
     QCoreApplication::setApplicationName("DllGatherer");
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
         QFileInfo fileToGatherDllsFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
         if (not fileToGatherDllsFileInfo.exists())
         {
-            fileToGatherDllsStr.prepend(".").prepend(QDir::separator());
+            fileToGatherDllsStr.prepend("./");
             fileToGatherDllsFileInfo = QFileInfo(QDir::fromNativeSeparators(fileToGatherDllsStr));
             //qout << R"(fileToGatherDllsStr )" << fileToGatherDllsStr << endl;
             if (not fileToGatherDllsFileInfo.exists())
@@ -158,6 +161,7 @@ R"({
 //            {
 //                qout << "dllFolder_ite_con " << dllFolder_ite_con.toString() << endl;
 //            }
+            controlCToExitTmp = config.controlCToExit_pub;
         }
 
         if (config.cygcheckPath_pub.isEmpty())
@@ -206,7 +210,7 @@ R"({
 //        }
         
         
-        QStringList oneArgument({QString(".") + QDir::separator() + fileToGatherDllsFileInfo.fileName()});
+        QStringList oneArgument({QString("./") + fileToGatherDllsFileInfo.fileName()});
         //call windeployqtPath_pub if set
         if (not config.windeployqtPath_pub.isEmpty())
         {
@@ -387,5 +391,14 @@ R"({
         qout << "Errors:\n" << errorStr << endl;
 //        QThread::sleep(5);
         return EXIT_FAILURE;
+    }
+
+    if (controlCToExitTmp)
+    {
+        qout << "\nPress control+C to exit" << endl;
+        while (true)
+        {
+            QThread::sleep(1);
+        }
     }
 }
