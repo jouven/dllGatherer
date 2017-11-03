@@ -1,3 +1,4 @@
+#message($$QMAKESPEC)
 QT += core
 QT -= gui
 
@@ -46,13 +47,17 @@ CONFIG(debug, debug|release){
 
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_DEBUG += -pedantic -Wall -Wextra -g3
-#mingw (on msys2) can't handle lto
-!win32:QMAKE_CXXFLAGS_RELEASE += -flto
+
+#if not win32, add flto, mingw (on msys2) can't handle lto
+unix:QMAKE_CXXFLAGS_RELEASE += -flto=jobserver
+#qt QMAKE defaults strike again, adds -mtune=core2 just because in win32
+win32:QMAKE_CXXFLAGS -= -mtune=core2
 QMAKE_CXXFLAGS_RELEASE += -mtune=sandybridge
 
-#for some reason QMAKE defaults add this to the linker, which is useless
-QMAKE_LFLAGS -= -m64
-#only for release...
-QMAKE_LFLAGS_RELEASE -= -Wl,-O1
+#for -flto=jobserver in the link step to work with -j4
+unix:QMAKE_LINK = +g++
 
+unix:QMAKE_LFLAGS += -fuse-ld=gold
 QMAKE_LFLAGS_RELEASE += -fvisibility=hidden
+#if not win32, add flto, mingw (on msys2) can't handle lto
+unix:QMAKE_LFLAGS_RELEASE += -flto=jobserver
