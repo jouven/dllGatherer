@@ -1,12 +1,15 @@
 #message($$QMAKESPEC)
-QT += core
 QT -= gui
 
-QMAKE_CXXFLAGS += -std=c++17
+!android:QMAKE_CXXFLAGS += -std=c++17
+android:QMAKE_CXXFLAGS += -std=c++14
 
 TARGET = dllGatherer
-CONFIG += console
 CONFIG -= app_bundle
+CONFIG += no_keywords
+CONFIG += console
+#(only windows) fixes the extra tier of debug and release build directories inside the first build directories
+win32:CONFIG -= debug_and_release
 
 TEMPLATE = app
 
@@ -48,16 +51,16 @@ CONFIG(debug, debug|release){
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_DEBUG += -pedantic -Wall -Wextra -g3
 
-#if not win32, add flto, mingw (on msys2) can't handle lto
-unix:QMAKE_CXXFLAGS_RELEASE += -flto=jobserver
-#qt QMAKE defaults strike again, adds -mtune=core2 just because in win32
-win32:QMAKE_CXXFLAGS -= -mtune=core2
-QMAKE_CXXFLAGS_RELEASE += -mtune=sandybridge
+#if not win32, add flto, mingw (on msys2) can't handle lto, CXXFLAGS
+linux:QMAKE_CXXFLAGS_RELEASE += -flto=jobserver
+#win32:QMAKE_CXXFLAGS_RELEASE += -flto
+!android:QMAKE_CXXFLAGS_RELEASE += -mtune=sandybridge
 
 #for -flto=jobserver in the link step to work with -j4
-unix:QMAKE_LINK = +g++
+linux:!android:QMAKE_LINK = +g++
 
-unix:QMAKE_LFLAGS += -fuse-ld=gold
+linux:QMAKE_LFLAGS += -fuse-ld=gold
 QMAKE_LFLAGS_RELEASE += -fvisibility=hidden
-#if not win32, add flto, mingw (on msys2) can't handle lto
-unix:QMAKE_LFLAGS_RELEASE += -flto=jobserver
+#if not win32, add flto, mingw (on msys2) can't handle lto, LFLAGS
+linux:QMAKE_LFLAGS_RELEASE += -flto=jobserver
+#win32:QMAKE_LFLAGS_RELEASE += -flto
