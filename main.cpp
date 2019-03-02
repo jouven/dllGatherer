@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
     parser.setApplicationDescription("DllGatherer description");
     parser.addHelpOption();
     parser.addVersionOption();
+    parser.addOption({"f", R"(Don't "pause" at the end)"});
     parser.addPositionalArgument("target", "Executable target to gather the dlls");
 
     // Process the actual command line arguments given by the user
@@ -393,9 +394,9 @@ R"({
         return EXIT_FAILURE;
     }
 
-    if (controlCToExitTmp)
+    if (controlCToExitTmp and not parser.isSet("f"))
     {
-        qout << "\nPress control+C or send a SIGTERM to exit" << endl;
+        qout << "\nPress control+C or close the window (or send the equivalent signal) to exit" << endl;
         while (true)
         {
             QThread::sleep(1);
