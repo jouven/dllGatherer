@@ -240,6 +240,15 @@ R"({
             QProcess cygcheckProcess;
             cygcheckProcess.setWorkingDirectory(fileToGatherDllsFileInfo.canonicalPath());
             //cygcheckProcess.setProcessChannelMode(QProcess::MergedChannels);
+
+            //Why this?
+            //dependencies that can be found in any of the PATH paths don't trigger cygcheck.exe
+            {
+                QProcessEnvironment envTmp(QProcessEnvironment::systemEnvironment());
+                envTmp.insert("PATH", "C:/Windows/system32;C:/Windows;C:/Windows/System32/Wbem;");
+                cygcheckProcess.setProcessEnvironment(envTmp);
+            }
+
             cygcheckProcess.start(config.cygcheckPath_pub, oneArgument);
             if (not cygcheckProcess.waitForFinished())
             {
